@@ -13,7 +13,7 @@ import re
 import sys
 import time
 from dataclasses import dataclass
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 from html import unescape
 from pathlib import Path
 from typing import Any, Dict, Iterable, List, Optional, Tuple
@@ -244,6 +244,71 @@ def first_value(data: Dict[str, Any], keys: Iterable[str]) -> Any:
     return ""
 
 
+def parse_datetime(value: Any) -> Optional[datetime]:
+    if value in (None, ""):
+        return None
+    if isinstance(value, (int, float)):
+        timestamp = float(value)
+        if timestamp > 1_000_000_000_000:
+            timestamp = timestamp / 1000
+        try:
+            return datetime.fromtimestamp(timestamp)
+        except (OSError, ValueError):
+            return None
+    text = str(value).strip()
+    if not text:
+        return None
+    if text.isdigit():
+        return parse_datetime(int(text))
+    text = text.replace("/", "-").replace("T", " ")
+    text = re.sub(r"\.\d+", "", text)
+    text = re.sub(r"(Z|[+-]\d{2}:?\d{2})$", "", text).strip()
+    for fmt in ("%Y-%m-%d %H:%M:%S", "%Y-%m-%d %H:%M", "%Y-%m-%d", "%Y-%m-%d %H:%M:%S %Z"):
+        try:
+            return datetime.strptime(text[: len(fmt)], fmt)
+        except ValueError:
+            continue
+    match = re.search(r"(\d{4})-(\d{1,2})-(\d{1,2})", text)
+    if match:
+        return datetime(int(match.group(1)), int(match.group(2)), int(match.group(3)))
+    return None
+
+
+def item_datetime(item: Dict[str, Any], detail: Optional[Dict[str, Any]] = None) -> Optional[datetime]:
+    keys = (
+        "roadshowDate",
+        "meetingDate",
+        "publishTime",
+        "createdAt",
+        "createdTime",
+        "updateTime",
+        "date",
+        "time",
+    )
+    for data in (detail or {}, item):
+        value = first_value(data, keys)
+        parsed = parse_datetime(value)
+        if parsed:
+            return parsed
+    return None
+
+
+def filter_recent_items(
+    items: List[Dict[str, Any]],
+    details: Dict[str, Optional[Dict[str, Any]]],
+    days: Optional[int],
+) -> List[Dict[str, Any]]:
+    if not days:
+        return items
+    cutoff = datetime.now() - timedelta(days=days)
+    recent: List[Dict[str, Any]] = []
+    for item in items:
+        dt = item_datetime(item, details.get(pick_id(item)))
+        if dt and dt >= cutoff:
+            recent.append(item)
+    return recent
+
+
 def names(values: Any) -> List[str]:
     if not isinstance(values, list):
         return []
@@ -380,6 +445,7 @@ def main() -> int:
     parser.add_argument("--pages", type=int, default=5, help="Maximum list pages to request. Default: 5.")
     parser.add_argument("--size", type=int, default=15, help="Page size. Default: 15.")
     parser.add_argument("--max-items", type=int, help="Maximum notes to write.")
+    parser.add_argument("--days", type=int, help="Only write meeting minutes dated within the last N days.")
     parser.add_argument("--delay", type=float, default=1.0, help="Delay between list pages in seconds. Default: 1.0.")
     parser.add_argument("--no-detail", action="store_true", help="Skip detail API and save list-card data only.")
     parser.add_argument("--timeout", type=int, default=30, help="HTTP timeout in seconds. Default: 30.")
@@ -407,6 +473,11 @@ def main() -> int:
                     print(f"Detail failed for {item_id}: {exc}", file=sys.stderr)
                 details[item_id] = None
             time.sleep(args.delay)
+
+    items = filter_recent_items(items, details, args.days)
+    if not items:
+        print(f"No AlphaPai meeting minutes found within the last {args.days} days.")
+        return 0
 
     output_dir = resolve_output_dir(args)
     files = write_notes(args.query, items, details, output_dir)
