@@ -1,0 +1,4 @@
+interface:
+  display_name: "Alpha派会议纪要采集"
+  short_description: "按主题或公司名抓取 Alpha派会议纪要并写入 Obsidian raw 笔记。"
+  default_prompt: "抓取 Alpha派中关于这个主题或公司的会议纪要，并保存到 Obsidian raw 目录。"

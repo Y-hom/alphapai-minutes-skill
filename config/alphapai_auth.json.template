@@ -1,0 +1,6 @@
+{
+  "alphapai": {
+    "authorization": "paste localStorage.USER_AUTH_TOKEN here",
+    "secret_key": "paste localStorage.SECRET_KEY here"
+  }
+}

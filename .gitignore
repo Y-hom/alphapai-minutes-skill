@@ -1,0 +1,12 @@
+config/alphapai_auth.json
+__pycache__/
+*.pyc
+*.pyo
+*.csv
+*.xlsx
+*.log
+.env
+*.env
+debug_*
+Raw_Sources/
+
