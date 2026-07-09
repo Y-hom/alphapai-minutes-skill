@@ -463,6 +463,11 @@ def main() -> int:
         return 0
 
     details: Dict[str, Optional[Dict[str, Any]]] = {}
+    items = filter_recent_items(items, details, args.days)
+    if not items:
+        print(f"No AlphaPai meeting minutes found within the last {args.days} days.")
+        return 0
+
     if not args.no_detail:
         for item in items:
             item_id = pick_id(item)
