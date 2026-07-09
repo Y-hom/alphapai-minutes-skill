@@ -1,4 +1,8 @@
 config/alphapai_auth.json
+.local/
+browser-profile/
+storage-state.json
+*.har
 __pycache__/
 *.pyc
 *.pyo
@@ -9,4 +13,3 @@ __pycache__/
 *.env
 debug_*
 Raw_Sources/
-
