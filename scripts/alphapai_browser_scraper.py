@@ -140,10 +140,6 @@ def search_minutes_browser(
         body = {
             "pageNum": page_num,
             "pageSize": size,
-            "reportSource": True,
-            "containCommentPic": True,
-            "followType": 0,
-            "type": 31,
             "word": query,
         }
         print(f"Searching AlphaPai page {page_num}/{pages}: {query}")

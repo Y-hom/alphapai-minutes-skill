@@ -22,8 +22,8 @@ import requests
 
 
 BASE_URL = "https://alphapai-web.rabyte.cn"
-LIST_API = f"{BASE_URL}/external/alpha/api/reading/information/flow/stock/information/list2"
-DETAIL_API = f"{BASE_URL}/external/alpha/api/reading/summary/detail"
+LIST_API = f"{BASE_URL}/external/alpha/api/reading/roadshow/summary/list"
+DETAIL_API = f"{BASE_URL}/external/alpha/api/reading/roadshow/summary/detail"
 DETAIL_URL = f"{BASE_URL}/reading/home/meeting/detail?articleId={{id}}"
 SUCCESS_CODE = 200000
 DES_IV = b"\x01\x02\x03\x04\x05\x06\x07\x08"
@@ -167,6 +167,10 @@ def extract_items_from_flow(data: Dict[str, Any]) -> Tuple[List[Dict[str, Any]],
     records: List[Dict[str, Any]] = []
     total = 0
 
+    if isinstance(data, dict) and isinstance(data.get("list"), list):
+        total = int(data.get("total") or len(data.get("list") or []))
+        return [item for item in data.get("list") or [] if isinstance(item, dict)], total
+
     flow = data.get("informationFlow") if isinstance(data, dict) else None
     if isinstance(flow, dict):
         total = int(flow.get("total") or 0)
@@ -203,10 +207,6 @@ def search_minutes(
         body = {
             "pageNum": page,
             "pageSize": size,
-            "reportSource": True,
-            "containCommentPic": True,
-            "followType": 0,
-            "type": 31,
             "word": query,
         }
         payload = client.post_json(LIST_API, body)
