@@ -5,7 +5,7 @@ description: Collect AlphaPai meeting minutes into an Obsidian vault. Use when t
 
 # AlphaPai Meeting Minutes
 
-Search AlphaPai by keyword and write matching meeting minutes into an Obsidian raw-source folder. Prefer the persistent browser workflow for demos and reusable local use, because it avoids exposing `Authorization` or `SECRET_KEY` in config files.
+Search AlphaPai by keyword and write matching meeting minutes into an Obsidian raw-source folder. Prefer the persistent browser workflow because it avoids exposing `Authorization` or `SECRET_KEY` in config files.
 
 ## Recommended: Persistent Edge Browser Profile
 
